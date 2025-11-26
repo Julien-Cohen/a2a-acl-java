@@ -64,29 +64,30 @@ public final class PingableAgentExecutorProducer {
         public void execute(final RequestContext context,
                             final EventQueue eventQueue) throws JSONRPCError {
 
-            final TaskUpdater updater = new TaskUpdater(context, eventQueue);
-
 
             // extract the text from the message
-            final String assignment = extractTextFromMessage(context.getMessage());
+            Message message = context.getMessage();
+            final String assignment = extractTextFromMessage(message);
+            final String illoc = extractIllocutionFromMessage(message) ;
+            System.out.println("Message illocution: "+ illoc);
+            final String codec = extractCodecFromMessage(message);
+            System.out.println("Content codec: "+ codec);
 
-            if (assignment.equals("ping")) {
-                System.out.println("Received a ping request");
-                // create the response part
-                final TextPart responsePart = new TextPart("OK");
-                final List<Part<?>> parts = List.of(responsePart);
 
-                // add the response as an artifact
-                updater.addArtifact(parts, null, null, null);
+            if (assignment.equals("ping") && illoc!= null && illoc.equals("achieve")) {
+                System.out.println("Received a achieve/ping request");
+                eventQueue.enqueueEvent(A2A.toAgentMessage("OK : achieve/ping received."));
+
+                spawn_send_pong(context.getConfiguration().pushNotificationConfig().url());
             }
             else {
-                // create the response part
+                eventQueue.enqueueEvent(A2A.toAgentMessage("KO : Unknown request."));
                 System.out.println("Unknown request (only receive ping requests)." );
                 System.exit(-1);
             }
-            // complete the task
-            updater.complete();
-            spawn_send_pong(context.getConfiguration().pushNotificationConfig().url());
+
+
+
         }
 
         private String extractTextFromMessage(final Message message) {
@@ -99,6 +100,42 @@ public final class PingableAgentExecutorProducer {
                 }
             }
             return textBuilder.toString();
+        }
+
+
+        String extractIllocutionFromMessage(final Message m){
+            List<Part<?>> l = m.getParts() ;
+            if (l != null && l.size() != 0) {
+                Part<?> p = l.get(0) ;
+                Map<String,Object> md = p.getMetadata();
+                if (md != null)
+                    return md.get("illocution").toString();
+            }
+            return null ;
+        }
+
+        String extractCodecFromMessage(final Message m){
+            List<Part<?>> l = m.getParts() ;
+            if (l != null && l.size() != 0) {
+                Part<?> p = l.get(0) ;
+                Map<String,Object> md = p.getMetadata();
+                if (md != null) {
+                    Object codec = md.get("codec");
+                    if (codec == null){
+                        System.out.println("No codec found in " + md.toString());
+                        return null ;
+                    }
+                    else return codec.toString();
+                }
+                else {
+                    System.out.println("No metadata found");
+                    return null ;
+                }
+            }
+            else {
+                System.out.println("No part found.");
+                return null ;
+            }
         }
 
         @Override
@@ -179,7 +216,10 @@ public final class PingableAgentExecutorProducer {
                                 .build();
 
                         // Create and send the message
-                        Message message = A2A.toUserMessage(messageText);
+                        TextPart p = buildBDITextPart("tell", "atom", messageText);
+                        Message.Builder messageBuilder = (new Message.Builder()).role(Message.Role.AGENT).parts(Collections.singletonList(p));
+                        Message message = messageBuilder.build();
+                        //Message message = A2A.toUserMessage(messageText);
                         //Message.Builder b = new Message.Builder();
                         //Map<String, Object> m = new HashMap<>();
                         //m.put("illocution", "tell");
