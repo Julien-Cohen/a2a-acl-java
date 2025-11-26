@@ -13,6 +13,7 @@ import io.a2a.client.transport.jsonrpc.JSONRPCTransportConfig;
 import io.a2a.server.agentexecution.AgentExecutor;
 import io.a2a.server.agentexecution.RequestContext;
 import io.a2a.server.events.EventQueue;
+import io.a2a.server.events.EventQueueItem;
 import io.a2a.server.tasks.TaskUpdater;
 import io.a2a.spec.*;
 import io.grpc.Channel;
@@ -65,7 +66,7 @@ public final class PingerAgentExecutorProducer {
         public void execute(final RequestContext context,
                             final EventQueue eventQueue) throws JSONRPCError {
 
-            final TaskUpdater updater = new TaskUpdater(context, eventQueue);
+            //final TaskUpdater updater = new TaskUpdater(context, eventQueue);
 
 
             // extract the text from the message
@@ -78,9 +79,9 @@ public final class PingerAgentExecutorProducer {
                 final List<Part<?>> parts = List.of(responsePart);
 
                 // add the response as an artifact
-                updater.addArtifact(parts, null, null, null);
+                //updater.addArtifact(parts, null, null, null);
                 // complete the task
-                updater.complete();
+                //updater.complete();
             }
             else if (assignment.startsWith("do_ping")){
                 System.out.println("Synchronous reply OK.");
@@ -88,9 +89,9 @@ public final class PingerAgentExecutorProducer {
                 final List<Part<?>> parts = List.of(responsePart);
 
                 // add the response as an artifact
-                updater.addArtifact(parts, null, null, null);
+                //updater.addArtifact(parts, null, null, null);
                 // complete the task
-                updater.complete();
+                //updater.complete();
 
                 System.out.println("Send PING to other agent.");
                 this.spawn_send_ping(otherAgentUrl);
@@ -102,8 +103,7 @@ public final class PingerAgentExecutorProducer {
                 System.out.println("Unknown request (only receive ping requests)." );
                 System.exit(0);
             }
-
-
+            eventQueue.enqueueEvent(A2A.toAgentMessage("OK."));
         }
 
         private String extractTextFromMessage(final Message message) {
