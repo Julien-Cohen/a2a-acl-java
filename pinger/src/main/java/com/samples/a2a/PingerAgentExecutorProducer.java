@@ -31,10 +31,10 @@ import java.util.function.Function;
 
 
 /**
- * Producer for Content Pingable Agent Executor.
+ * Producer for Pinger Agent Executor.
  */
 @ApplicationScoped
-public final class PingableAgentExecutorProducer {
+public final class PingerAgentExecutorProducer {
 
     /**
      * Creates the agent executor for the content writer agent.
@@ -43,17 +43,18 @@ public final class PingableAgentExecutorProducer {
      */
     @Produces
     public AgentExecutor agentExecutor() {
-        return new PingableAgentExecutor();
+        return new PingerAgentExecutor();
     }
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-    static String messageText = "pong";
+    static final String messageText = "ping";
     /**
      * Agent executor implementation for content writer.
      */
-    private static class PingableAgentExecutor implements AgentExecutor {
+    private static class PingerAgentExecutor implements AgentExecutor {
 
-
+        static final String myUrl = "http://127.0.0.1:9999";
+        static final String otherAgentUrl = "http://127.0.0.1:9998";
 
         static TextPart buildBDITextPart(String illoc, String codec, String content){
             Map<String, Object> md = new Hashtable<>();
@@ -72,23 +73,28 @@ public final class PingableAgentExecutorProducer {
             // extract the text from the message
             final String assignment = extractTextFromMessage(context.getMessage());
 
-            if (assignment.equals("ping")) {
-                System.out.println("Received a ping request");
+            if (assignment.equals("pong")) {
+                System.out.println("Received a pong");
                 // create the response part
-                final TextPart responsePart = buildBDITextPart("pong", "tell", "atom_codec");
+                final TextPart responsePart = buildBDITextPart("ok", "tell", "atom_codec");
                 final List<Part<?>> parts = List.of(responsePart);
 
                 // add the response as an artifact
                 updater.addArtifact(parts, null, null, null);
             }
+            else if (assignment.startsWith("do_ping")){
+                System.out.println("Send PING.");
+                this.send_ping(otherAgentUrl);
+            }
             else {
+                System.out.println(assignment);
                 // create the response part
                 System.out.println("Unknown request (only receive ping requests)." );
-                System.exit(-1);
+                System.exit(0);
             }
             // complete the task
             updater.complete();
-            send_pong(context.getConfiguration().pushNotificationConfig().url());
+
         }
 
         private String extractTextFromMessage(final Message message) {
@@ -123,7 +129,7 @@ public final class PingableAgentExecutorProducer {
             updater.cancel();
         }
 
-        void send_pong(String serverUrl) {
+        void send_ping(String serverUrl) {
             try {
                 System.out.println("Connecting to agent at: " + serverUrl);
             AgentCard publicAgentCard =
@@ -154,6 +160,7 @@ public final class PingableAgentExecutorProducer {
 
             ClientConfig clientConfig = new ClientConfig.Builder()
                     .setAcceptedOutputModes(List.of("Text"))
+                    .setPushNotificationConfig(new PushNotificationConfig(myUrl, null, null, null))
                     .build();
             // Create a custom HTTP client
             //A2AHttpClient customHttpClient = ...

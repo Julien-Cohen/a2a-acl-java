@@ -13,7 +13,7 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 /** Producer for Content Writer Agent Card. */
 @ApplicationScoped
-public final class PingableAgentCardProducer {
+public final class PingerAgentCardProducer {
 
   /** HTTP port for the agent. */
   @Inject
@@ -29,9 +29,9 @@ public final class PingableAgentCardProducer {
   @PublicAgentCard
   public AgentCard agentCard() {
     return new AgentCard.Builder()
-        .name("Pingable Agent")
+        .name("Pinger Agent")
         .description(
-            "An agent that can receive ping and replies with pong."
+            "An agent that can send ping and receive pong."
         )
         .url("http://localhost:" + httpPort)
         .version("1.0.0")
@@ -47,14 +47,14 @@ public final class PingableAgentCardProducer {
         .skills(
             Collections.singletonList(
                 new AgentSkill.Builder()
-                    .id("ping")
-                    .name("Ping")
+                    .id("pong")
+                    .name("Pong")
                     .description(
-                        "Receive a ping and would reply with a pong")
-                    .tags(List.of("ping"))
+                        "Receive a pong")
+                    .tags(List.of("pong"))
                     .examples(
                         List.of(
-                            "ping"))
+                            "pong"))
                     .build()))
         .protocolVersion("0.3.3.Final")
         .build();
