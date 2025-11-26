@@ -75,7 +75,7 @@ public final class PingableAgentExecutorProducer {
             if (assignment.equals("ping")) {
                 System.out.println("Received a ping request");
                 // create the response part
-                final TextPart responsePart = buildBDITextPart("pong", "tell", "atom_codec");
+                final TextPart responsePart = new TextPart("OK");
                 final List<Part<?>> parts = List.of(responsePart);
 
                 // add the response as an artifact
@@ -88,7 +88,7 @@ public final class PingableAgentExecutorProducer {
             }
             // complete the task
             updater.complete();
-            send_pong(context.getConfiguration().pushNotificationConfig().url());
+            //send_pong(context.getConfiguration().pushNotificationConfig().url());
         }
 
         private String extractTextFromMessage(final Message message) {
