@@ -6,7 +6,6 @@ import io.a2a.client.config.ClientConfig;
 import io.a2a.client.http.A2ACardResolver;
 import io.a2a.client.http.A2AHttpClient;
 import io.a2a.client.http.JdkA2AHttp11Client;
-import io.a2a.client.http.JdkA2AHttpClient;
 import io.a2a.client.transport.grpc.GrpcTransport;
 import io.a2a.client.transport.grpc.GrpcTransportConfig;
 import io.a2a.client.transport.jsonrpc.JSONRPCTransport;
@@ -117,15 +116,11 @@ public class BDIAgentExecutor {
                             .setAcceptedOutputModes(List.of("Text"))
                             .setPushNotificationConfig(new PushNotificationConfig(replyToUrl, null, null, null))
                             .build();
-                    // Create a custom HTTP client
+                    // Create a custom HTTP client for HTTP 1.1 instead of HTTP 2 (for python uvicorn A2A servers)
                     A2AHttpClient customHttpClient = new JdkA2AHttp11Client();
-                    //HttpClient c1 = HttpClient.newBuilder().version(HttpClient.Version.HTTP_1_1).followRedirects(HttpClient.Redirect.NORMAL).build();
-                    //A2AHttpClient c2 ;
-                    //JdkA2AHttpClient myHttpClient;
 
-                    // Create the client with both JSON-RPC and gRPC transport support.
-                    // The A2A server agent's preferred transport is gRPC, since the client
-                    // also supports gRPC, this is the transport that will get used
+                    // Create the client with several transport support.
+
                     Client client = Client.builder(publicAgentCard)
                             .addConsumers(consumers)
                             .streamingErrorHandler(streamingErrorHandler)
@@ -134,7 +129,6 @@ public class BDIAgentExecutor {
                             .withTransport(JSONRPCTransport.class,
                                     new JSONRPCTransportConfig(customHttpClient))
                             .withTransport(RestTransport.class, new RestTransportConfig())
-                            //.withTransport(RestTransport.class, new RestTransportConfig())
                             .clientConfig(clientConfig)
                             .build();
 
@@ -142,15 +136,6 @@ public class BDIAgentExecutor {
                     TextPart p = buildBDITextPart(illocution, codec, content);
                     Message.Builder messageBuilder = (new Message.Builder()).role(Message.Role.AGENT).parts(Collections.singletonList(p));
                     Message message = messageBuilder.build();
-                    //Message message = A2A.toUserMessage(messageText);
-                    //Message.Builder b = new Message.Builder();
-                    //Map<String, Object> m = new HashMap<>();
-                    //m.put("illocution", "tell");
-                    //m.put("codec", "tmp_codec");
-                    //b.metadata(m) ;
-                    //b.parts(Collections.singletonList(new TextPart("pong")));
-                    //b.role(Message.Role.AGENT);
-                    //Message message = b.build();
 
                     System.out.println("Sending message: " + content);
                     client.sendMessage(message);

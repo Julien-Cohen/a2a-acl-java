@@ -1,6 +1,5 @@
 package com.samples.a2a.pingable;
 
-
 import io.a2a.A2A;
 import io.a2a.server.agentexecution.AgentExecutor;
 import io.a2a.server.agentexecution.RequestContext;

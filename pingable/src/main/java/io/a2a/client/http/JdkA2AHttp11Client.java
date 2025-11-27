@@ -1,3 +1,8 @@
+/* Copy of https://github.com/a2aproject/a2a-java/blob/main/http-client/src/main/java/io/a2a/client/http/JdkA2AHttpClient.java
+    licenced under Apache 2.0 licence.
+    Change : HttpClient.Version.HTTP_2 -> HttpClient.Version.HTTP_1_1
+*/
+
 package io.a2a.client.http;
 
 import static java.net.HttpURLConnection.HTTP_FORBIDDEN;
