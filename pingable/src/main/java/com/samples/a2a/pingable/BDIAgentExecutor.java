@@ -8,6 +8,8 @@ import io.a2a.client.transport.grpc.GrpcTransport;
 import io.a2a.client.transport.grpc.GrpcTransportConfig;
 import io.a2a.client.transport.jsonrpc.JSONRPCTransport;
 import io.a2a.client.transport.jsonrpc.JSONRPCTransportConfig;
+import io.a2a.client.transport.rest.RestTransport ;
+import io.a2a.client.transport.rest.RestTransportConfig;
 import io.a2a.spec.*;
 import io.grpc.Channel;
 import io.grpc.ManagedChannelBuilder;
@@ -128,6 +130,7 @@ public class BDIAgentExecutor {
                                     new GrpcTransportConfig(channelFactory))
                             .withTransport(JSONRPCTransport.class,
                                     new JSONRPCTransportConfig())
+                            .withTransport(RestTransport.class, new RestTransportConfig())
                             //.withTransport(RestTransport.class, new RestTransportConfig())
                             .clientConfig(clientConfig)
                             .build();

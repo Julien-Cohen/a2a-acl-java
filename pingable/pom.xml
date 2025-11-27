@@ -55,7 +55,12 @@
             <groupId>io.github.a2asdk</groupId>
             <artifactId>a2a-java-sdk-reference-rest</artifactId>
             <!-- Use a released version from https://github.com/a2aproject/a2a-java/releases -->
-            <version>${io.a2a.sdk.version}</version>
+            <version>0.3.2.Final</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.a2asdk</groupId>
+            <artifactId>a2a-java-sdk-client-transport-rest</artifactId>
+            <version>0.3.2.Final</version>
         </dependency>
         <dependency>
             <groupId>io.github.a2asdk</groupId>
