@@ -4,6 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.a2a.client.*;
 import io.a2a.client.config.ClientConfig;
 import io.a2a.client.http.A2ACardResolver;
+import io.a2a.client.http.A2AHttpClient;
+import io.a2a.client.http.JdkA2AHttp11Client;
+import io.a2a.client.http.JdkA2AHttpClient;
 import io.a2a.client.transport.grpc.GrpcTransport;
 import io.a2a.client.transport.grpc.GrpcTransportConfig;
 import io.a2a.client.transport.jsonrpc.JSONRPCTransport;
@@ -115,7 +118,7 @@ public class BDIAgentExecutor {
                             .setPushNotificationConfig(new PushNotificationConfig(replyToUrl, null, null, null))
                             .build();
                     // Create a custom HTTP client
-                    //A2AHttpClient customHttpClient = ...
+                    A2AHttpClient customHttpClient = new JdkA2AHttp11Client();
                     //HttpClient c1 = HttpClient.newBuilder().version(HttpClient.Version.HTTP_1_1).followRedirects(HttpClient.Redirect.NORMAL).build();
                     //A2AHttpClient c2 ;
                     //JdkA2AHttpClient myHttpClient;
@@ -129,7 +132,7 @@ public class BDIAgentExecutor {
                             .withTransport(GrpcTransport.class,
                                     new GrpcTransportConfig(channelFactory))
                             .withTransport(JSONRPCTransport.class,
-                                    new JSONRPCTransportConfig())
+                                    new JSONRPCTransportConfig(customHttpClient))
                             .withTransport(RestTransport.class, new RestTransportConfig())
                             //.withTransport(RestTransport.class, new RestTransportConfig())
                             .clientConfig(clientConfig)
