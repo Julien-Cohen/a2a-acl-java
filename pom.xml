@@ -12,6 +12,7 @@
     <modules>
         <module>pingable</module>
         <module>pinger</module>
+        <module>a2a-acl</module>
     </modules>
 
     <properties>
