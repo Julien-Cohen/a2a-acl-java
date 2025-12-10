@@ -2,9 +2,7 @@ package com.samples.a2a.pingable;
 
 import io.a2a.A2A;
 import io.a2a.server.agentexecution.AgentExecutor;
-import io.a2a.server.agentexecution.RequestContext;
 import io.a2a.server.events.EventQueue;
-import io.a2a.server.tasks.TaskUpdater;
 import io.a2a.spec.*;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Produces;
@@ -40,11 +38,11 @@ public final class PingableAgentExecutorProducer {
                             final EventQueue eventQueue) throws JSONRPCError {
 
 
-            if (m.content.equals("ping") && m.illocution!= null && m.illocution.equals("achieve")) {
+            if (m.content().equals("ping") && m.illocution()!= null && m.illocution().equals("achieve")) {
                 System.out.println("Received a achieve/ping request");
                 eventQueue.enqueueEvent(A2A.toAgentMessage("OK : achieve/ping received."));
 
-                spawn_send_message(m.sender, myUrl, "tell", "atom_codec", "pong");
+                spawn_send_message(m.sender(), myUrl, "tell", "atom_codec", "pong");
             }
             else {
                 eventQueue.enqueueEvent(A2A.toAgentMessage("KO : Unknown request."));

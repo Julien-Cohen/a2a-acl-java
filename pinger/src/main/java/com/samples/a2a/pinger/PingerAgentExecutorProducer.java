@@ -2,9 +2,7 @@ package com.samples.a2a.pinger;
 
 import io.a2a.A2A;
 import io.a2a.server.agentexecution.AgentExecutor;
-import io.a2a.server.agentexecution.RequestContext;
 import io.a2a.server.events.EventQueue;
-import io.a2a.server.tasks.TaskUpdater;
 import io.a2a.spec.*;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Produces;
@@ -43,12 +41,12 @@ public final class PingerAgentExecutorProducer  {
 
 
 
-            if (message.content.equals("pong")&& message.illocution!= null && message.illocution.equals("tell")) {
+            if (message.content().equals("pong")&& message.illocution()!= null && message.illocution().equals("tell")) {
                 eventQueue.enqueueEvent(A2A.toAgentMessage("OK : tell/pong received."));
                 System.out.println("Test OK : Received a tell/pong");
 
             }
-            else if (message.content.startsWith("do_ping") && message.illocution!= null && message.illocution.equals("achieve")){
+            else if (message.content().startsWith("do_ping") && message.illocution()!= null && message.illocution().equals("achieve")){
                 System.out.println("achieve/do_ping received.");
                 System.out.println("Synchronous reply OK.");
                 eventQueue.enqueueEvent(A2A.toAgentMessage("OK : achieve/do_ping received."));
@@ -58,7 +56,7 @@ public final class PingerAgentExecutorProducer  {
             }
             else {
                 eventQueue.enqueueEvent(A2A.toAgentMessage("KO : Unknown request."));
-                System.out.println(message.content);
+                System.out.println(message.content());
                 System.out.println("Unknown request (only receive do_ping or pong requests)." );
                 System.exit(0);
             }
