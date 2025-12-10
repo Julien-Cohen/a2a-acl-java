@@ -16,6 +16,10 @@ import io.a2a.client.MessageEvent ;
 import io.a2a.client.TaskUpdateEvent ;
 import io.a2a.client.TaskEvent ;
 import io.a2a.client.Client ;
+import io.a2a.server.agentexecution.AgentExecutor;
+import io.a2a.server.agentexecution.RequestContext;
+import io.a2a.server.events.EventQueue;
+import io.a2a.server.tasks.TaskUpdater;
 import io.a2a.spec.*;
 import io.grpc.Channel;
 import io.grpc.ManagedChannelBuilder;
@@ -26,13 +30,14 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-public class BDIAgentExecutor {
+
+public abstract class BDIAgentExecutor implements AgentExecutor {
     static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     public static String extractTextFromMessage(final Message message) {
         final StringBuilder textBuilder = new StringBuilder();
         if (message.getParts() != null) {
-            for (final Part part : message.getParts()) {
+            for (final Part<?> part : message.getParts()) {
                 if (part instanceof TextPart textPart) {
                     textBuilder.append(textPart.getText());
                 }
@@ -219,4 +224,29 @@ public class BDIAgentExecutor {
         }
         return textBuilder.toString();
     }
+/*
+    @Override
+    public void execute(final RequestContext context,
+                        final EventQueue eventQueue) throws JSONRPCError {
+    }*/
+    @Override
+    public void cancel(final RequestContext context,
+                       final EventQueue eventQueue) throws JSONRPCError {
+        final Task task = context.getTask();
+
+        if (task.getStatus().state() == TaskState.CANCELED) {
+            // task already cancelled
+            throw new TaskNotCancelableError();
+        }
+
+        if (task.getStatus().state() == TaskState.COMPLETED) {
+            // task already completed
+            throw new TaskNotCancelableError();
+        }
+
+        // cancel the task
+        final TaskUpdater updater = new TaskUpdater(context, eventQueue);
+        updater.cancel();
+    }
+
 }

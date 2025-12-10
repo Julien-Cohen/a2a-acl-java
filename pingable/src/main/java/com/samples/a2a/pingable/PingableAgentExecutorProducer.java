@@ -15,7 +15,7 @@ import mosaico.acl.BDIAgentExecutor;
  * Producer for Content Pingable Agent Executor.
  */
 @ApplicationScoped
-public final class PingableAgentExecutorProducer extends BDIAgentExecutor {
+public final class PingableAgentExecutorProducer {
 
     /**
      * Creates the agent executor for the content writer agent.
@@ -30,7 +30,7 @@ public final class PingableAgentExecutorProducer extends BDIAgentExecutor {
     /**
      * Agent executor implementation for ping service.
      */
-    private static class PingableAgentExecutor implements AgentExecutor {
+    private static class PingableAgentExecutor extends BDIAgentExecutor {
 
         static final String myUrl = "http://127.0.0.1:9998";
 
@@ -62,25 +62,7 @@ public final class PingableAgentExecutorProducer extends BDIAgentExecutor {
         }
 
 
-        @Override
-        public void cancel(final RequestContext context,
-                           final EventQueue eventQueue) throws JSONRPCError {
-            final Task task = context.getTask();
 
-            if (task.getStatus().state() == TaskState.CANCELED) {
-                // task already cancelled
-                throw new TaskNotCancelableError();
-            }
-
-            if (task.getStatus().state() == TaskState.COMPLETED) {
-                // task already completed
-                throw new TaskNotCancelableError();
-            }
-
-            // cancel the task
-            final TaskUpdater updater = new TaskUpdater(context, eventQueue);
-            updater.cancel();
-        }
 
     }
 }
