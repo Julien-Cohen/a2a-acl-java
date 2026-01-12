@@ -230,10 +230,27 @@ public abstract class BDIAgentExecutor implements AgentExecutor {
         final String codec = extractCodecFromMessage(message);
         final String sender = context.getConfiguration().pushNotificationConfig().url() ;
         ACLMessage m = new ACLMessage(illoc, content, sender, codec);
-        this.execute(m, eventQueue);
+        switch (illoc) {
+            case "tell" :
+                this.executeTell(m,eventQueue);
+                break;
+            case "achieve" :
+                this.executeAchieve(m,eventQueue);
+                break;
+            case "ask" :
+                this.executeAsk(m,eventQueue);
+                break;
+            default:
+                this.executeOther(m,eventQueue);
+        }
     }
 
-    public abstract void execute(final ACLMessage message, final EventQueue eventQueue);
+    public abstract void executeTell(final ACLMessage message, final EventQueue eventQueue);
+    public abstract void executeAchieve(final ACLMessage message, final EventQueue eventQueue);
+    public abstract void executeAsk(final ACLMessage message, final EventQueue eventQueue);
+    public abstract void executeOther(final ACLMessage message, final EventQueue eventQueue);
+
+
 
     @Override
     public void cancel(final RequestContext context,
