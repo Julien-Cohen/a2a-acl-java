@@ -32,7 +32,7 @@ import java.util.function.Function;
 
 
 public abstract class BDIAgentExecutor implements AgentExecutor {
-    static final ObjectMapper OBJECT_MAPPER = new ObjectMapper(); // FIXME
+
 
     public static final String extension_uri = "https://gitlab.eclipse.org/eclipse-research-labs/mosaico-project/a2a-acl/-/blob/main/a2a_acl_protocol/MOSAICO_A2A_ACL_PROTOCOL";
     public static final String invalid_message = "This message is not compliant with MOSAICO A2A ACL.";
@@ -251,14 +251,12 @@ public abstract class BDIAgentExecutor implements AgentExecutor {
     @Override
     public void execute(final RequestContext context,
                         final EventQueue eventQueue) throws JSONRPCError {
-        System.out.println("Received a message with metadata: " + context.getMessage().getMetadata());
         Message message = context.getMessage();
         final String content = extractTextFromMessage(message);
         final String illoc = extractIllocutionFromMessage(message);
         final String codec = extractCodecFromMessage(message);
         final String sender = context.getConfiguration().pushNotificationConfig().url() ;
         ACLMessage m = new ACLMessage(illoc, content, sender, codec);
-        System.out.println(m.toString());
         if (illoc == null) throw new InvalidParamsError();
         else {
             switch (illoc) {
@@ -287,7 +285,6 @@ public abstract class BDIAgentExecutor implements AgentExecutor {
     @Override
     public void cancel(final RequestContext context,
                        final EventQueue eventQueue) throws JSONRPCError {
-        System.out.println("!CANCEL!");
         final Task task = context.getTask();
 
         if (task.getStatus().state() == TaskState.CANCELED) {
