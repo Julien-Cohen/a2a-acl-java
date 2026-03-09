@@ -108,14 +108,6 @@ public abstract class BDIAgentExecutor implements AgentExecutor {
         }
     }
 
-    /** Deprecated : metadata should be in Messages and not in Parts. */
-    @Deprecated
-    static TextPart buildBDITextPart(String illoc, String codec, String content){
-        Map<String, Object> md = new Hashtable<>();
-        md.put("illocution", illoc);
-        md.put("codec", codec);
-        return new TextPart(content, md);
-    }
 
     public static void spawn_send_message(String toUrl, final String replyToUrl, final String illocution, final String codec, final String content) {
         class MyRunnable implements Runnable {
@@ -169,7 +161,7 @@ public abstract class BDIAgentExecutor implements AgentExecutor {
                             .build();
 
                     // Create and send the message
-                    TextPart p = buildBDITextPart(illocution, codec, content); // FIXME
+                    TextPart p = new TextPart(content);
 
                     Message.Builder messageBuilder = (new Message.Builder()).role(Message.Role.AGENT).parts(Collections.singletonList(p));
                     Message message0 = messageBuilder.build();
