@@ -32,7 +32,40 @@ import java.util.function.Function;
 
 
 public abstract class BDIAgentExecutor implements AgentExecutor {
-    static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    static final ObjectMapper OBJECT_MAPPER = new ObjectMapper(); // FIXME
+
+    public static final String extension_uri = "https://gitlab.eclipse.org/eclipse-research-labs/mosaico-project/a2a-acl/-/blob/main/a2a_acl_protocol/MOSAICO_A2A_ACL_PROTOCOL";
+    public static final String invalid_message = "This message is not compliant with MOSAICO A2A ACL.";
+
+    /** Returns a copy of a given message with an illocution added accordingly to the MOSAICO ACL A2A extension. */
+    public static Message addIllocution(Message m, String illoc, String codec){
+
+        // First, get a copy of the meta-data of m, or build a fresh metadata map if null.
+        Map<String,Object> md ;
+        if (m.getMetadata() == null){
+            md = new HashMap<>();
+        }
+        else { md = new HashMap<>(m.getMetadata()); }
+
+        // Second, create a fresh map for MOSAICO-ACL metadata
+        Map<String,Object> md2 = new HashMap<>();
+        md2.put("illocution", illoc);
+        md2.put("codec", codec);
+
+        // Then put the MOSAICO-ACL map in the metadata map.
+        md.put(extension_uri, md2);
+
+        List<String> extensions ;
+        if (m.getExtensions() == null)
+            extensions = Collections.singletonList(extension_uri);
+        else {
+            extensions = new ArrayList<>(m.getExtensions());
+            extensions.add(extension_uri);
+        }
+        return new Message(m.getRole(), m.getParts(), m.getMessageId(), m.getContextId(), m.getTaskId(), m.getReferenceTaskIds(), md, extensions, m.getKind());
+    }
+
+
 
     public static String extractTextFromMessage(final Message message) {
         final StringBuilder textBuilder = new StringBuilder();
@@ -46,41 +79,37 @@ public abstract class BDIAgentExecutor implements AgentExecutor {
         return textBuilder.toString();
     }
 
+    public static boolean checkMetadata(final Message m){
+        Map<String, Object> md = m.getMetadata() ;
+        if(md==null) return false;
+        if(!md.containsKey(extension_uri)) return false;
+        Map<String,Object> md2 = (Map<String,Object>) md.get(extension_uri) ;
+        if (md2==null) return false ;
+        if (!md2.containsKey("illocution")) return false ;
+        if(md2.get("illocution") == null) return false ;
+        return true ;
+    }
+
     public static String extractIllocutionFromMessage(final Message m){
-        List<Part<?>> l = m.getParts() ;
-        if (l != null && !l.isEmpty()) {
-            Part<?> p = l.get(0) ;
-            Map<String,Object> md = p.getMetadata();
-            if (md != null)
-                return md.get("illocution").toString();
+        if (!checkMetadata(m))
+            throw new UnsupportedOperationException(invalid_message);
+        else {
+            Map<String, Object> md = (Map<String, Object>) m.getMetadata().get(extension_uri);
+            return md.get("illocution").toString();
         }
-        return null ;
     }
 
     public static String extractCodecFromMessage(final Message m){
-        List<Part<?>> l = m.getParts() ;
-        if (l != null && !l.isEmpty()) {
-            Part<?> p = l.get(0) ;
-            Map<String,Object> md = p.getMetadata();
-            if (md != null) {
-                Object codec = md.get("codec");
-                if (codec == null){
-                    System.out.println("No codec found in " + md.toString());
-                    return null ;
-                }
-                else return codec.toString();
-            }
-            else {
-                System.out.println("No metadata found");
-                return null ;
-            }
-        }
+        if (!checkMetadata(m)) // FIXME : checked twice
+            throw new UnsupportedOperationException(invalid_message);
         else {
-            System.out.println("No part found.");
-            return null ;
+            Map<String, Object> md = (Map<String, Object>) m.getMetadata().get(extension_uri);
+            return md.get("codec").toString();
         }
     }
 
+    /** Deprecated : metadata should be in Messages and not in Parts. */
+    @Deprecated
     static TextPart buildBDITextPart(String illoc, String codec, String content){
         Map<String, Object> md = new Hashtable<>();
         md.put("illocution", illoc);
@@ -140,9 +169,11 @@ public abstract class BDIAgentExecutor implements AgentExecutor {
                             .build();
 
                     // Create and send the message
-                    TextPart p = buildBDITextPart(illocution, codec, content);
+                    TextPart p = buildBDITextPart(illocution, codec, content); // FIXME
+
                     Message.Builder messageBuilder = (new Message.Builder()).role(Message.Role.AGENT).parts(Collections.singletonList(p));
-                    Message message = messageBuilder.build();
+                    Message message0 = messageBuilder.build();
+                    Message message = addIllocution(message0, illocution, codec);
 
                     System.out.println("(Sending message: " + content + ")");
                     client.sendMessage(message);
@@ -167,7 +198,8 @@ public abstract class BDIAgentExecutor implements AgentExecutor {
     }
 
     static List<BiConsumer<ClientEvent, AgentCard>> getConsumers(
-            final CompletableFuture<String> messageResponse) {
+            final CompletableFuture<String> messageResponse
+        ) {
         List<BiConsumer<ClientEvent, AgentCard>> consumers = new ArrayList<>();
         consumers.add(
                 (event, agentCard) -> {
@@ -176,7 +208,8 @@ public abstract class BDIAgentExecutor implements AgentExecutor {
                         String text = extractTextFromParts(responseMessage.getParts());
                         System.out.println("(Consume message: " + text + ")");
                         messageResponse.complete(text);
-                    } else if (event instanceof TaskUpdateEvent taskUpdateEvent) {
+                    }
+                    else if (event instanceof TaskUpdateEvent taskUpdateEvent) {
                         UpdateEvent updateEvent = taskUpdateEvent.getUpdateEvent();
                         if (updateEvent
                                 instanceof TaskStatusUpdateEvent taskStatusUpdateEvent) {
@@ -193,7 +226,8 @@ public abstract class BDIAgentExecutor implements AgentExecutor {
                                 String text = textBuilder.toString();
                                 messageResponse.complete(text);
                             }
-                        } else if (updateEvent instanceof TaskArtifactUpdateEvent
+                        }
+                        else if (updateEvent instanceof TaskArtifactUpdateEvent
                                 taskArtifactUpdateEvent) {
                             List<Part<?>> parts = taskArtifactUpdateEvent
                                     .getArtifact()
@@ -201,7 +235,8 @@ public abstract class BDIAgentExecutor implements AgentExecutor {
                             String text = extractTextFromParts(parts);
                             System.out.println("(Consume artifact-update: " + text + ")");
                         }
-                    } else if (event instanceof TaskEvent taskEvent) {
+                    }
+                    else if (event instanceof TaskEvent taskEvent) {
                         System.out.println("(Consume task event: "
                                 + taskEvent.getTask().getId() + ")");
                     }
@@ -224,24 +259,29 @@ public abstract class BDIAgentExecutor implements AgentExecutor {
     @Override
     public void execute(final RequestContext context,
                         final EventQueue eventQueue) throws JSONRPCError {
+        System.out.println("Received a message with metadata: " + context.getMessage().getMetadata());
         Message message = context.getMessage();
         final String content = extractTextFromMessage(message);
         final String illoc = extractIllocutionFromMessage(message);
         final String codec = extractCodecFromMessage(message);
         final String sender = context.getConfiguration().pushNotificationConfig().url() ;
         ACLMessage m = new ACLMessage(illoc, content, sender, codec);
-        switch (illoc) {
-            case "tell" :
-                this.executeTell(m,eventQueue);
-                break;
-            case "achieve" :
-                this.executeAchieve(m,eventQueue);
-                break;
-            case "ask" :
-                this.executeAsk(m,eventQueue);
-                break;
-            default:
-                this.executeOther(m,eventQueue);
+        System.out.println(m.toString());
+        if (illoc == null) throw new InvalidParamsError();
+        else {
+            switch (illoc) {
+                case "tell":
+                    this.executeTell(m, eventQueue);
+                    break;
+                case "achieve":
+                    this.executeAchieve(m, eventQueue);
+                    break;
+                case "ask":
+                    this.executeAsk(m, eventQueue);
+                    break;
+                default:
+                    this.executeOther(m, eventQueue);
+            }
         }
     }
 
@@ -255,6 +295,7 @@ public abstract class BDIAgentExecutor implements AgentExecutor {
     @Override
     public void cancel(final RequestContext context,
                        final EventQueue eventQueue) throws JSONRPCError {
+        System.out.println("!CANCEL!");
         final Task task = context.getTask();
 
         if (task.getStatus().state() == TaskState.CANCELED) {
